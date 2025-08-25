@@ -1,0 +1,2181 @@
+{
+  "datasets": [
+    {
+      "name": "1bb727fb",
+      "displayName": "Orders and Customers",
+      "queryLines": [
+        "SELECT\n",
+        "  o_orderdate,\n",
+        "  o_custkey\n",
+        "FROM\n",
+        "  `samples`.`tpch`.`orders`"
+      ]
+    },
+    {
+      "name": "3530ec9c",
+      "displayName": "Orders vs Returns",
+      "queryLines": [
+        "SELECT\n",
+        "    l_shipdate,\n",
+        "    l_suppkey,\n",
+        "    COUNT(*) AS total_orders,\n",
+        "    SUM(CASE WHEN l_returnflag = 'R' THEN 1 ELSE 0 END) AS return_count\n",
+        "FROM\n",
+        "    samples.tpch.lineitem\n",
+        "GROUP BY\n",
+        "    l_shipdate,\n",
+        "    l_suppkey\n",
+        "ORDER BY\n",
+        "    l_shipdate;"
+      ]
+    },
+    {
+      "name": "3b52879a",
+      "displayName": "Overall Supplier Count",
+      "queryLines": [
+        "SELECT\n",
+        "  COUNT(distinct(s_suppkey)) AS num_suppliers\n",
+        "FROM\n",
+        "  `samples`.`tpch`.`supplier`"
+      ]
+    },
+    {
+      "name": "a91573ca",
+      "displayName": "Order count by priority and ship mode",
+      "queryLines": [
+        "SELECT\n",
+        "    o.o_orderpriority AS priority,\n",
+        "    l.l_shipmode AS ship_mode,\n",
+        "    COUNT(*) AS order_count,\n",
+        "    o.o_orderdate\n",
+        "FROM\n",
+        "    samples.tpch.orders AS o\n",
+        "JOIN\n",
+        "    samples.tpch.lineitem AS l\n",
+        "ON\n",
+        "    o.o_orderkey = l.l_orderkey\n",
+        "GROUP BY\n",
+        "    o.o_orderpriority,\n",
+        "    l.l_shipmode,\n",
+        "    o.o_orderdate\n",
+        "ORDER BY\n",
+        "    priority,\n",
+        "    ship_mode;"
+      ]
+    },
+    {
+      "name": "ced91012",
+      "displayName": "Revenue Trends by Nation",
+      "queryLines": [
+        "SELECT\n",
+        "    o_orderdate,\n",
+        "    n_name AS nation,\n",
+        "    sum(l_extendedprice * (1 - l_discount) * (((length(n_name))/100) + (year(o_orderdate)-1993)/100)) AS revenue\n",
+        "FROM\n",
+        "    `samples`.`tpch`.`customer`,\n",
+        "    `samples`.`tpch`.`orders`,\n",
+        "    `samples`.`tpch`.`lineitem`,\n",
+        "    `samples`.`tpch`.`nation`\n",
+        "WHERE\n",
+        "    c_custkey = o_custkey\n",
+        "    AND l_orderkey = o_orderkey\n",
+        "    AND c_nationkey = n_nationkey\n",
+        "    AND n_name in ('ARGENTINA', 'UNITED KINGDOM', 'FRANCE', 'BRAZIL', 'CHINA', 'UNITED STATES', 'JAPAN', 'JORDAN')\n",
+        "GROUP BY\n",
+        "    o_orderdate,\n",
+        "    nation\n",
+        "ORDER BY\n",
+        "    nation ASC,\n",
+        "    o_orderdate ASC;"
+      ]
+    },
+    {
+      "name": "e7a62da2",
+      "displayName": "Revenue by Order Priority",
+      "queryLines": [
+        "SELECT\n",
+        "  o_orderdate AS Date,\n",
+        "  o_orderpriority AS Priority,\n",
+        "  sum(o_totalprice) AS `Total Price`\n",
+        "FROM\n",
+        "  `samples`.`tpch`.`orders`\n",
+        "WHERE\n",
+        "  o_orderdate > '1994-01-01'\n",
+        "  AND o_orderdate < '1994-01-31'\n",
+        "GROUP BY\n",
+        "  1,\n",
+        "  2\n",
+        "ORDER BY\n",
+        "  1,\n",
+        "  2"
+      ]
+    },
+    {
+      "name": "ee8e48ce",
+      "displayName": "Most Valuable Customers",
+      "queryLines": [
+        "SELECT\n",
+        "  revenue_per_customer.customer_id AS `Customer ID #`,\n",
+        "  customers.c_mktsegment AS `Customer Segment`,\n",
+        "  concat(\n",
+        "    '<div style=\"background-color:#',\n",
+        "    CASE\n",
+        "      WHEN revenue_per_customer.total_revenue BETWEEN 0 AND 1500000 THEN '88BFE0'\n",
+        "      WHEN revenue_per_customer.total_revenue BETWEEN 1500001 AND 3000000 THEN 'FCED9F'\n",
+        "      WHEN revenue_per_customer.total_revenue BETWEEN 3000001 AND 5000000 THEN 'ED9A93'\n",
+        "      ELSE 'CACFD3'\n",
+        "    END,\n",
+        "    '; text-align:center;\"> $',\n",
+        "    format_number(revenue_per_customer.total_revenue, 0),\n",
+        "    '</div>'\n",
+        "  ) AS `Total Customer Revenue`\n",
+        "FROM\n",
+        "  (\n",
+        "    SELECT\n",
+        "      o_custkey AS customer_id,\n",
+        "      sum(o_totalprice) AS total_revenue\n",
+        "    FROM\n",
+        "      `samples`.`tpch`.`orders`\n",
+        "    GROUP BY\n",
+        "      1\n",
+        "    HAVING\n",
+        "      total_revenue > 0\n",
+        "  ) AS revenue_per_customer\n",
+        "JOIN `samples`.`tpch`.`customer` AS customers\n",
+        "  ON revenue_per_customer.customer_id = customers.c_custkey\n",
+        "JOIN `samples`.`tpch`.`region` AS region\n",
+        "  ON customers.c_nationkey = region.r_regionkey\n",
+        "ORDER BY\n",
+        "  revenue_per_customer.customer_id\n",
+        "LIMIT\n",
+        "  400"
+      ]
+    },
+    {
+      "name": "ea13d9cf",
+      "displayName": "Contingent demand by years",
+      "queryLines": [
+        "SELECT\r\n",
+        "  `customer`.`c_mktsegment`,\r\n",
+        "  SUM(`lineitem`.`l_quantity`) AS contingent_demand\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`lineitem`\r\n",
+        "    JOIN `samples`.`tpch`.`orders`\r\n",
+        "      ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "    JOIN `samples`.`tpch`.`customer`\r\n",
+        "      ON `orders`.`o_custkey` = `customer`.`c_custkey`\r\n",
+        "WHERE\r\n",
+        "  `customer`.`c_mktsegment` IS NOT NULL\r\n",
+        "  AND `lineitem`.`l_quantity` IS NOT NULL\r\n",
+        "GROUP BY\r\n",
+        "  `customer`.`c_mktsegment`"
+      ]
+    },
+    {
+      "name": "20dab91f",
+      "displayName": "Average retail price",
+      "queryLines": [
+        "SELECT\r\n",
+        "  AVG(`part`.`p_retailprice`) AS average_retail_price\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`part`"
+      ]
+    },
+    {
+      "name": "9e16b81d",
+      "displayName": "Demand vs Supply",
+      "queryLines": [
+        "SELECT\r\n",
+        "  `part`.`p_name`,\r\n",
+        "  SUM(`lineitem`.`l_quantity`) AS total_demand,\r\n",
+        "  SUM(`partsupp`.`ps_availqty`) AS total_supply\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`lineitem`\r\n",
+        "    JOIN `samples`.`tpch`.`orders`\r\n",
+        "      ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "    JOIN `samples`.`tpch`.`part`\r\n",
+        "      ON `lineitem`.`l_partkey` = `part`.`p_partkey`\r\n",
+        "    JOIN `samples`.`tpch`.`partsupp`\r\n",
+        "      ON `part`.`p_partkey` = `partsupp`.`ps_partkey`\r\n",
+        "WHERE\r\n",
+        "  YEAR(`orders`.`o_orderdate`) = 1998\r\n",
+        "  AND `part`.`p_name` IN (\r\n",
+        "    SELECT\r\n",
+        "      `part`.`p_name`\r\n",
+        "    FROM\r\n",
+        "      `samples`.`tpch`.`lineitem`\r\n",
+        "        JOIN `samples`.`tpch`.`orders`\r\n",
+        "          ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "        JOIN `samples`.`tpch`.`part`\r\n",
+        "          ON `lineitem`.`l_partkey` = `part`.`p_partkey`\r\n",
+        "    WHERE\r\n",
+        "      YEAR(`orders`.`o_orderdate`) = 1998\r\n",
+        "    GROUP BY\r\n",
+        "      `part`.`p_name`\r\n",
+        "    ORDER BY\r\n",
+        "      SUM(`lineitem`.`l_quantity`) DESC\r\n",
+        "    LIMIT 10\r\n",
+        "  )\r\n",
+        "GROUP BY\r\n",
+        "  `part`.`p_name`"
+      ]
+    },
+    {
+      "name": "2895faf9",
+      "displayName": "Last 12 months sales by region",
+      "queryLines": [
+        "SELECT\r\n",
+        "  `region`.`r_name`,\r\n",
+        "  SUM(`lineitem`.`l_extendedprice`) AS total_sales\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`lineitem`\r\n",
+        "    JOIN `samples`.`tpch`.`orders`\r\n",
+        "      ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "    JOIN `samples`.`tpch`.`customer`\r\n",
+        "      ON `orders`.`o_custkey` = `customer`.`c_custkey`\r\n",
+        "    JOIN `samples`.`tpch`.`nation`\r\n",
+        "      ON `customer`.`c_nationkey` = `nation`.`n_nationkey`\r\n",
+        "    JOIN `samples`.`tpch`.`region`\r\n",
+        "      ON `nation`.`n_regionkey` = `region`.`r_regionkey`\r\n",
+        "WHERE\r\n",
+        "  `orders`.`o_orderdate` BETWEEN ADD_MONTHS('1998-08-02', -12) AND '1998-08-02'\r\n",
+        "GROUP BY\r\n",
+        "  `region`.`r_name`"
+      ]
+    },
+    {
+      "name": "ef7c4885",
+      "displayName": "Top 10 product filll rates",
+      "queryLines": [
+        "SELECT\r\n",
+        "  `part`.`p_name`,\r\n",
+        "  try_divide(SUM(`partsupp`.`ps_availqty`), SUM(`lineitem`.`l_quantity`)) AS fill_rate\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`lineitem`\r\n",
+        "    JOIN `samples`.`tpch`.`orders`\r\n",
+        "      ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "    JOIN `samples`.`tpch`.`part`\r\n",
+        "      ON `lineitem`.`l_partkey` = `part`.`p_partkey`\r\n",
+        "    JOIN `samples`.`tpch`.`partsupp`\r\n",
+        "      ON `part`.`p_partkey` = `partsupp`.`ps_partkey`\r\n",
+        "WHERE\r\n",
+        "  YEAR(`orders`.`o_orderdate`) = 1998\r\n",
+        "  AND `part`.`p_name` IN (\r\n",
+        "    SELECT\r\n",
+        "      `part`.`p_name`\r\n",
+        "    FROM\r\n",
+        "      `samples`.`tpch`.`lineitem`\r\n",
+        "        JOIN `samples`.`tpch`.`orders`\r\n",
+        "          ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "        JOIN `samples`.`tpch`.`part`\r\n",
+        "          ON `lineitem`.`l_partkey` = `part`.`p_partkey`\r\n",
+        "    WHERE\r\n",
+        "      YEAR(`orders`.`o_orderdate`) = 1998\r\n",
+        "    GROUP BY\r\n",
+        "      `part`.`p_name`\r\n",
+        "    ORDER BY\r\n",
+        "      SUM(`lineitem`.`l_quantity`) DESC\r\n",
+        "    LIMIT 10\r\n",
+        "  )\r\n",
+        "GROUP BY\r\n",
+        "  `part`.`p_name`"
+      ]
+    },
+    {
+      "name": "f8c2fe06",
+      "displayName": "total weekly sales volume (in unit cases) for the top brands, broken down by region",
+      "queryLines": [
+        "SELECT\r\n",
+        "  WEEKOFYEAR(`orders`.`o_orderdate`) AS week,\r\n",
+        "  `region`.`r_name`,\r\n",
+        "  `part`.`p_brand`,\r\n",
+        "  `customer`.`c_mktsegment`,\r\n",
+        "  SUM(`lineitem`.`l_quantity`) AS total_volume_sales\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`lineitem`\r\n",
+        "    JOIN `samples`.`tpch`.`orders`\r\n",
+        "      ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "    JOIN `samples`.`tpch`.`customer`\r\n",
+        "      ON `orders`.`o_custkey` = `customer`.`c_custkey`\r\n",
+        "    JOIN `samples`.`tpch`.`nation`\r\n",
+        "      ON `customer`.`c_nationkey` = `nation`.`n_nationkey`\r\n",
+        "    JOIN `samples`.`tpch`.`region`\r\n",
+        "      ON `nation`.`n_regionkey` = `region`.`r_regionkey`\r\n",
+        "    JOIN `samples`.`tpch`.`part`\r\n",
+        "      ON `lineitem`.`l_partkey` = `part`.`p_partkey`\r\n",
+        "GROUP BY\r\n",
+        "  WEEKOFYEAR(`orders`.`o_orderdate`),\r\n",
+        "  `region`.`r_name`,\r\n",
+        "  `part`.`p_brand`,\r\n",
+        "  `customer`.`c_mktsegment`\r\n",
+        "ORDER BY\r\n",
+        "  total_volume_sales DESC\r\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "5710b668",
+      "displayName": "price/mix performance",
+      "queryLines": [
+        "SELECT\r\n",
+        "  `part`.`p_name`,\r\n",
+        "  `customer`.`c_mktsegment`,\r\n",
+        "  SUM(`lineitem`.`l_quantity`) AS total_sales_mix,\r\n",
+        "  ROUND(AVG(`part`.`p_retailprice`), 2) AS average_price\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`lineitem`\r\n",
+        "    JOIN `samples`.`tpch`.`part`\r\n",
+        "      ON `lineitem`.`l_partkey` = `part`.`p_partkey`\r\n",
+        "    JOIN `samples`.`tpch`.`orders`\r\n",
+        "      ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "    JOIN `samples`.`tpch`.`customer`\r\n",
+        "      ON `orders`.`o_custkey` = `customer`.`c_custkey`\r\n",
+        "WHERE\r\n",
+        "  `part`.`p_name` IS NOT NULL\r\n",
+        "  AND `customer`.`c_mktsegment` IS NOT NULL\r\n",
+        "  AND `lineitem`.`l_quantity` IS NOT NULL\r\n",
+        "  AND `part`.`p_retailprice` IS NOT NULL\r\n",
+        "GROUP BY\r\n",
+        "  `part`.`p_name`,\r\n",
+        "  `customer`.`c_mktsegment`\r\n",
+        "ORDER BY\r\n",
+        "  total_sales_mix DESC\r\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "43c4818c",
+      "displayName": "weekly revenue percentage change",
+      "queryLines": [
+        "SELECT\r\n",
+        "  week,\r\n",
+        "  total_revenue,\r\n",
+        "  LAG(total_revenue, 1) OVER (ORDER BY week) AS previous_week_revenue,\r\n",
+        "  try_subtract(total_revenue, LAG(total_revenue, 1) OVER (ORDER BY week)) AS revenue_change,\r\n",
+        "  try_divide(\r\n",
+        "    try_subtract(total_revenue, LAG(total_revenue, 1) OVER (ORDER BY week)),\r\n",
+        "    LAG(total_revenue, 1) OVER (ORDER BY week)\r\n",
+        "  )\r\n",
+        "  * 100 AS percentage_change\r\n",
+        "FROM\r\n",
+        "  (\r\n",
+        "    SELECT\r\n",
+        "      WEEKOFYEAR(`orders`.`o_orderdate`) AS week,\r\n",
+        "      SUM(`lineitem`.`l_extendedprice`) AS total_revenue\r\n",
+        "    FROM\r\n",
+        "      `samples`.`tpch`.`lineitem`\r\n",
+        "        JOIN `samples`.`tpch`.`orders`\r\n",
+        "          ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "    GROUP BY\r\n",
+        "      WEEKOFYEAR(`orders`.`o_orderdate`)\r\n",
+        "    ORDER BY\r\n",
+        "      week\r\n",
+        "  )"
+      ]
+    },
+    {
+      "name": "c33aa0de",
+      "displayName": "Ontime Delivery rate",
+      "queryLines": [
+        "SELECT\r\n",
+        "  try_divide(\r\n",
+        "    SUM(\r\n",
+        "      CASE\r\n",
+        "        WHEN `lineitem`.`l_shipdate` <= `lineitem`.`l_commitdate` THEN 1\r\n",
+        "        ELSE 0\r\n",
+        "      END\r\n",
+        "    ),\r\n",
+        "    COUNT(*)\r\n",
+        "  )\r\n",
+        "  * 100 AS on_time_delivery_rate_percentage\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`lineitem`"
+      ]
+    },
+    {
+      "name": "669c28eb",
+      "displayName": "Fill rates",
+      "queryLines": [
+        "SELECT\r\n",
+        "  AVG(fill_rate) AS average_fill_rate\r\n",
+        "FROM\r\n",
+        "  (\r\n",
+        "    SELECT\r\n",
+        "      try_divide(SUM(`partsupp`.`ps_availqty`), SUM(`lineitem`.`l_quantity`)) AS fill_rate\r\n",
+        "    FROM\r\n",
+        "      `samples`.`tpch`.`lineitem`\r\n",
+        "        JOIN `samples`.`tpch`.`orders`\r\n",
+        "          ON `lineitem`.`l_orderkey` = `orders`.`o_orderkey`\r\n",
+        "        JOIN `samples`.`tpch`.`part`\r\n",
+        "          ON `lineitem`.`l_partkey` = `part`.`p_partkey`\r\n",
+        "        JOIN `samples`.`tpch`.`partsupp`\r\n",
+        "          ON `part`.`p_partkey` = `partsupp`.`ps_partkey`\r\n",
+        "    WHERE\r\n",
+        "      YEAR(`orders`.`o_orderdate`) = 1998\r\n",
+        "  ) AS subquery"
+      ]
+    },
+    {
+      "name": "1a87bf42",
+      "displayName": "Total Order and Returns",
+      "queryLines": [
+        "SELECT\r\n",
+        "  COUNT(*) AS total_orders,\r\n",
+        "  SUM(\r\n",
+        "    CASE\r\n",
+        "      WHEN `lineitem`.`l_returnflag` = 'R' THEN 1\r\n",
+        "      ELSE 0\r\n",
+        "    END\r\n",
+        "  ) AS total_returns\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`orders`\r\n",
+        "    JOIN `samples`.`tpch`.`lineitem`\r\n",
+        "      ON `orders`.`o_orderkey` = `lineitem`.`l_orderkey`"
+      ]
+    },
+    {
+      "name": "b9fc3cc0",
+      "displayName": "Out of Stock Return Orders Count",
+      "queryLines": [
+        "SELECT\r\n",
+        "  COUNT(*) AS total_out_of_stock_orders\r\n",
+        "FROM\r\n",
+        "  `samples`.`tpch`.`orders`\r\n",
+        "    JOIN `samples`.`tpch`.`lineitem`\r\n",
+        "      ON `orders`.`o_orderkey` = `lineitem`.`l_orderkey`\r\n",
+        "    JOIN `samples`.`tpch`.`partsupp`\r\n",
+        "      ON `lineitem`.`l_partkey` = `partsupp`.`ps_partkey`\r\n",
+        "WHERE\r\n",
+        "  `lineitem`.`l_returnflag` = 'R'\r\n",
+        "  AND `lineitem`.`l_quantity` > `partsupp`.`ps_availqty`"
+      ]
+    },
+    {
+      "name": "5b7cd168",
+      "displayName": "CashFlow_position",
+      "queryLines": [
+        "SELECT \r\n",
+        "  `c_mktsegment`, \r\n",
+        "  AVG(`c_acctbal`) AS avg_acctbal\r\n",
+        "FROM \r\n",
+        "  `samples`.`tpch`.`customer`\r\n",
+        "GROUP BY \r\n",
+        "  `c_mktsegment`\r\n",
+        "ORDER BY \r\n",
+        "  `c_mktsegment`;"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "e04b37dc",
+      "displayName": "Summary",
+      "layout": [
+        {
+          "widget": {
+            "name": "0387035e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3530ec9c",
+                  "fields": [
+                    {
+                      "name": "countdistinct(l_suppkey)",
+                      "expression": "COUNT(DISTINCT `l_suppkey`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "value": {
+                  "displayName": "Count of Unique l_suppkey",
+                  "fieldName": "countdistinct(l_suppkey)"
+                }
+              },
+              "frame": {
+                "description": "Unique Suppliers",
+                "showDescription": false,
+                "showTitle": true,
+                "title": "Unique Suppliers"
+              },
+              "version": 2,
+              "widgetType": "counter"
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "08bf1423",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1bb727fb",
+                  "fields": [
+                    {
+                      "name": "countdistinct(o_custkey)",
+                      "expression": "COUNT(DISTINCT `o_custkey`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "value": {
+                  "displayName": "Count of Unique o_custkey",
+                  "fieldName": "countdistinct(o_custkey)"
+                }
+              },
+              "frame": {
+                "description": "Unique Customers",
+                "showDescription": false,
+                "showTitle": true,
+                "title": "Unique Customers"
+              },
+              "version": 2,
+              "widgetType": "counter"
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "2185ae62",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e7a62da2",
+                  "fields": [
+                    {
+                      "name": "Priority",
+                      "expression": "`Priority`"
+                    },
+                    {
+                      "name": "sum(Total Price)",
+                      "expression": "SUM(`Total Price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "angle": {
+                  "displayName": "Associated Revenue",
+                  "fieldName": "sum(Total Price)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "displayName": "Order Priority",
+                  "fieldName": "Priority",
+                  "scale": {
+                    "mappings": [
+                      {
+                        "color": "#B9486F",
+                        "value": "5-LOW"
+                      },
+                      {
+                        "color": "#FFBF73",
+                        "value": "4-NOT SPECIFIED"
+                      },
+                      {
+                        "color": "#FFEC93",
+                        "value": "3-MEDIUM"
+                      },
+                      {
+                        "color": "#C8CFD3",
+                        "value": "2-HIGH"
+                      },
+                      {
+                        "color": "#6B819C",
+                        "value": "1-URGENT"
+                      }
+                    ],
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "description": "All Time",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Revenue by Order Priority"
+              },
+              "version": 3,
+              "widgetType": "pie"
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "2f27af07",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ee8e48ce",
+                  "fields": [
+                    {
+                      "name": "Customer ID #",
+                      "expression": "`Customer ID #`"
+                    },
+                    {
+                      "name": "Customer Segment",
+                      "expression": "`Customer Segment`"
+                    },
+                    {
+                      "name": "Total Customer Revenue",
+                      "expression": "`Total Customer Revenue`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "allowHTMLByDefault": true,
+              "condensed": false,
+              "encodings": {
+                "columns": [
+                  {
+                    "alignContent": "right",
+                    "allowHTML": true,
+                    "allowSearch": false,
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "displayAs": "number",
+                    "displayName": "Customer ID #",
+                    "fieldName": "Customer ID #",
+                    "highlightLinks": false,
+                    "imageHeight": "",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "linkOpenInNewTab": true,
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "numberFormat": "",
+                    "order": 100000,
+                    "preserveWhitespace": false,
+                    "title": "Customer ID #",
+                    "type": "integer",
+                    "useMonospaceFont": false,
+                    "visible": true
+                  },
+                  {
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "allowSearch": false,
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "displayAs": "string",
+                    "displayName": "Customer Segment",
+                    "fieldName": "Customer Segment",
+                    "highlightLinks": false,
+                    "imageHeight": "",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "linkOpenInNewTab": true,
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "order": 100001,
+                    "preserveWhitespace": false,
+                    "title": "Customer Segment",
+                    "type": "string",
+                    "useMonospaceFont": false,
+                    "visible": true
+                  },
+                  {
+                    "alignContent": "left",
+                    "allowHTML": true,
+                    "allowSearch": false,
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "displayAs": "string",
+                    "displayName": "Total Customer Revenue",
+                    "fieldName": "Total Customer Revenue",
+                    "highlightLinks": false,
+                    "imageHeight": "",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "linkOpenInNewTab": true,
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "order": 100003,
+                    "preserveWhitespace": false,
+                    "title": "Total Customer Revenue",
+                    "type": "string",
+                    "useMonospaceFont": false,
+                    "visible": true
+                  }
+                ]
+              },
+              "frame": {
+                "description": "All Time",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Most Valuable Customers"
+              },
+              "invisibleColumns": [],
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "version": 1,
+              "widgetType": "table",
+              "withRowNumber": false
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 12,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "30fa90f0",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Retail Revenue & Supply Chain Overview"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "9d4b72c6",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ced91012",
+                  "fields": [
+                    {
+                      "name": "nation",
+                      "expression": "`nation`"
+                    },
+                    {
+                      "name": "sum(revenue)",
+                      "expression": "SUM(`revenue`)"
+                    },
+                    {
+                      "name": "yearly(o_orderdate)",
+                      "expression": "DATE_TRUNC(\"YEAR\", `o_orderdate`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "color": {
+                  "displayName": "Nation",
+                  "fieldName": "nation",
+                  "legend": {
+                    "position": "bottom"
+                  },
+                  "scale": {
+                    "mappings": [
+                      {
+                        "color": "#799CFF",
+                        "value": "revenue"
+                      },
+                      {
+                        "color": "#6B819C",
+                        "value": "ARGENTINA"
+                      },
+                      {
+                        "color": "#FFBF73",
+                        "value": "UNITED KINGDOM"
+                      },
+                      {
+                        "color": "#C8CFD3",
+                        "value": "FRANCE"
+                      },
+                      {
+                        "color": "#76C1E3",
+                        "value": "BRAZIL"
+                      },
+                      {
+                        "color": "#78B7C2",
+                        "value": "CHINA"
+                      },
+                      {
+                        "color": "#FFEC93",
+                        "value": "UNITED STATES"
+                      },
+                      {
+                        "color": "#FB9590",
+                        "value": "JAPAN"
+                      },
+                      {
+                        "color": "#B9486F",
+                        "value": "JORDAN"
+                      }
+                    ],
+                    "type": "categorical"
+                  }
+                },
+                "x": {
+                  "displayName": "Order Date",
+                  "fieldName": "yearly(o_orderdate)",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "axis": {
+                    "title": "Revenue"
+                  },
+                  "displayName": "Revenue",
+                  "fieldName": "sum(revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "description": "By Nation",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Revenue Trend"
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 2,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "b9d722ef",
+            "queries": [
+              {
+                "name": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1a58ea41d8abd497e3d322ed6cb_o_orderdate",
+                "query": {
+                  "datasetName": "ced91012",
+                  "fields": [
+                    {
+                      "name": "o_orderdate",
+                      "expression": "`o_orderdate`"
+                    },
+                    {
+                      "name": "o_orderdate_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1a58eb61207a6fe83b0fbe223bc_Date",
+                "query": {
+                  "datasetName": "e7a62da2",
+                  "fields": [
+                    {
+                      "name": "Date",
+                      "expression": "`Date`"
+                    },
+                    {
+                      "name": "Date_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1a58eb910c189ac48eb3557022d_o_orderdate",
+                "query": {
+                  "datasetName": "1bb727fb",
+                  "fields": [
+                    {
+                      "name": "o_orderdate",
+                      "expression": "`o_orderdate`"
+                    },
+                    {
+                      "name": "o_orderdate_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1ab760d1fa09512d065c91c1092_o_orderdate",
+                "query": {
+                  "datasetName": "a91573ca",
+                  "fields": [
+                    {
+                      "name": "o_orderdate",
+                      "expression": "`o_orderdate`"
+                    },
+                    {
+                      "name": "o_orderdate_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1aedd6c1a6ca2452baccaaf289d_l_shipdate",
+                "query": {
+                  "datasetName": "3530ec9c",
+                  "fields": [
+                    {
+                      "name": "l_shipdate",
+                      "expression": "`l_shipdate`"
+                    },
+                    {
+                      "name": "l_shipdate_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "fields": [
+                  {
+                    "displayName": "o_orderdate",
+                    "fieldName": "o_orderdate",
+                    "queryName": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1a58ea41d8abd497e3d322ed6cb_o_orderdate"
+                  },
+                  {
+                    "displayName": "Date",
+                    "fieldName": "Date",
+                    "queryName": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1a58eb61207a6fe83b0fbe223bc_Date"
+                  },
+                  {
+                    "displayName": "o_orderdate",
+                    "fieldName": "o_orderdate",
+                    "queryName": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1a58eb910c189ac48eb3557022d_o_orderdate"
+                  },
+                  {
+                    "displayName": "o_orderdate",
+                    "fieldName": "o_orderdate",
+                    "queryName": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1ab760d1fa09512d065c91c1092_o_orderdate"
+                  },
+                  {
+                    "displayName": "l_shipdate",
+                    "fieldName": "l_shipdate",
+                    "queryName": "dashboards/01eed1a58ea213dabed58b9c66678535/datasets/01eed1aedd6c1a6ca2452baccaaf289d_l_shipdate"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Date Range"
+              },
+              "version": 2,
+              "widgetType": "filter-date-range-picker"
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "d4d2ee35",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a91573ca",
+                  "fields": [
+                    {
+                      "name": "priority",
+                      "expression": "`priority`"
+                    },
+                    {
+                      "name": "ship_mode",
+                      "expression": "`ship_mode`"
+                    },
+                    {
+                      "name": "sum(order_count)",
+                      "expression": "SUM(`order_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "color": {
+                  "displayName": "Order Count",
+                  "fieldName": "sum(order_count)",
+                  "legend": {
+                    "title": "Order Count"
+                  },
+                  "scale": {
+                    "colorRamp": {
+                      "colors": {
+                        "end": "#536e96",
+                        "start": "#97d8ff"
+                      },
+                      "mode": "custom-sequential"
+                    },
+                    "reverse": true,
+                    "type": "quantitative"
+                  }
+                },
+                "x": {
+                  "displayName": "Order Priority",
+                  "fieldName": "priority",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "displayName": "Shipping Method",
+                  "fieldName": "ship_mode",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "frame": {
+                "description": "By Order Priority",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Top Shipping Methods"
+              },
+              "version": 3,
+              "widgetType": "heatmap"
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 7,
+            "width": 4,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "de550db9",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e7a62da2",
+                  "fields": [
+                    {
+                      "name": "Priority",
+                      "expression": "`Priority`"
+                    },
+                    {
+                      "name": "daily(Date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `Date`)"
+                    },
+                    {
+                      "name": "sum(Total Price)",
+                      "expression": "SUM(`Total Price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "color": {
+                  "displayName": "Priority",
+                  "fieldName": "Priority",
+                  "scale": {
+                    "mappings": [
+                      {
+                        "color": "#70819A",
+                        "value": "5-LOW"
+                      },
+                      {
+                        "color": "#88BFE0",
+                        "value": "4-NOT SPECIFIED"
+                      },
+                      {
+                        "color": "#86B6C0",
+                        "value": "3-MEDIUM"
+                      },
+                      {
+                        "color": "#ED9A93",
+                        "value": "2-HIGH"
+                      },
+                      {
+                        "color": "#AC506F",
+                        "value": "1-URGENT"
+                      }
+                    ],
+                    "type": "categorical"
+                  }
+                },
+                "x": {
+                  "axis": {
+                    "title": "Date"
+                  },
+                  "displayName": "Date",
+                  "fieldName": "daily(Date)",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "displayName": "Sum of Total Price",
+                  "fieldName": "sum(Total Price)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by Order Priority"
+              },
+              "mark": {
+                "colors": [
+                  "#6B819C",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ]
+              },
+              "version": 3,
+              "widgetType": "line"
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 1,
+            "width": 4,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "f7a5f200",
+      "displayName": "Executive Summary 1",
+      "layout": [
+        {
+          "widget": {
+            "name": "38a381c5",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ea13d9cf",
+                  "fields": [
+                    {
+                      "name": "c_mktsegment",
+                      "expression": "`c_mktsegment`"
+                    },
+                    {
+                      "name": "sum(contingent_demand)",
+                      "expression": "SUM(`contingent_demand`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "c_mktsegment",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "c_mktsegment"
+                },
+                "y": {
+                  "fieldName": "sum(contingent_demand)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of contingent_demand"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Contigent demand by Market Segment"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "1a1663ec",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "20dab91f",
+                  "fields": [
+                    {
+                      "name": "avg(average_retail_price)",
+                      "expression": "AVG(`average_retail_price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(average_retail_price)",
+                  "displayName": "Average average_retail_price"
+                }
+              },
+              "frame": {
+                "title": "Average Retail Price",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "25462ec8",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9e16b81d",
+                  "fields": [
+                    {
+                      "name": "p_name",
+                      "expression": "`p_name`"
+                    },
+                    {
+                      "name": "sum(total_demand)",
+                      "expression": "SUM(`total_demand`)"
+                    },
+                    {
+                      "name": "sum(total_supply)",
+                      "expression": "SUM(`total_supply`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "p_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "p_name"
+                },
+                "y": {
+                  "primary": {
+                    "fields": [
+                      {
+                        "fieldName": "sum(total_demand)",
+                        "displayName": "Sum of total_demand"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative",
+                      "fn": {
+                        "type": "symlog"
+                      }
+                    }
+                  },
+                  "secondary": {
+                    "fields": [
+                      {
+                        "fieldName": "sum(total_supply)",
+                        "displayName": "Sum of total_supply"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ea570e22",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9e16b81d",
+                  "fields": [
+                    {
+                      "name": "p_name",
+                      "expression": "`p_name`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "p_name",
+                  "style": {
+                    "fontSize": 12
+                  },
+                  "displayName": "p_name"
+                }
+              },
+              "frame": {
+                "title": "Highest Selling Product",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "51cb2f4e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2895faf9",
+                  "fields": [
+                    {
+                      "name": "sum(total_sales)",
+                      "expression": "SUM(`total_sales`)"
+                    },
+                    {
+                      "name": "r_name",
+                      "expression": "`r_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "heatmap",
+              "encodings": {
+                "x": {
+                  "fieldName": "r_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "r_name"
+                },
+                "y": {
+                  "fieldName": "r_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "r_name"
+                },
+                "color": {
+                  "fieldName": "sum(total_sales)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of total_sales"
+                }
+              },
+              "frame": {
+                "title": "Sales Distribution by Region",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 9,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "aab9638b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ef7c4885",
+                  "fields": [
+                    {
+                      "name": "p_name",
+                      "expression": "`p_name`"
+                    },
+                    {
+                      "name": "fill_rate",
+                      "expression": "`fill_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "p_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "p_name"
+                },
+                "y": {
+                  "fieldName": "fill_rate",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "fill_rate"
+                }
+              },
+              "frame": {
+                "title": "Product Fill Rates",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "72e8dcf6",
+            "queries": [
+              {
+                "name": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d515eeb5844683f984489c_o_orderdate",
+                "query": {
+                  "datasetName": "1bb727fb",
+                  "fields": [
+                    {
+                      "name": "o_orderdate",
+                      "expression": "`o_orderdate`"
+                    },
+                    {
+                      "name": "o_orderdate_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d51657a9fdafc56449f823_l_shipdate",
+                "query": {
+                  "datasetName": "3530ec9c",
+                  "fields": [
+                    {
+                      "name": "l_shipdate",
+                      "expression": "`l_shipdate`"
+                    },
+                    {
+                      "name": "l_shipdate_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d51694832da7f9e5a3d2f0_Date",
+                "query": {
+                  "datasetName": "e7a62da2",
+                  "fields": [
+                    {
+                      "name": "Date",
+                      "expression": "`Date`"
+                    },
+                    {
+                      "name": "Date_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d51687bfd8b711b1e3c813_o_orderdate",
+                "query": {
+                  "datasetName": "ced91012",
+                  "fields": [
+                    {
+                      "name": "o_orderdate",
+                      "expression": "`o_orderdate`"
+                    },
+                    {
+                      "name": "o_orderdate_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d5167abddfb319f56381be_o_orderdate",
+                "query": {
+                  "datasetName": "a91573ca",
+                  "fields": [
+                    {
+                      "name": "o_orderdate",
+                      "expression": "`o_orderdate`"
+                    },
+                    {
+                      "name": "o_orderdate_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "o_orderdate",
+                    "displayName": "o_orderdate",
+                    "queryName": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d515eeb5844683f984489c_o_orderdate"
+                  },
+                  {
+                    "fieldName": "l_shipdate",
+                    "displayName": "l_shipdate",
+                    "queryName": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d51657a9fdafc56449f823_l_shipdate"
+                  },
+                  {
+                    "fieldName": "Date",
+                    "displayName": "Date",
+                    "queryName": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d51694832da7f9e5a3d2f0_Date"
+                  },
+                  {
+                    "fieldName": "o_orderdate",
+                    "displayName": "o_orderdate",
+                    "queryName": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d51687bfd8b711b1e3c813_o_orderdate"
+                  },
+                  {
+                    "fieldName": "o_orderdate",
+                    "displayName": "o_orderdate",
+                    "queryName": "dashboards/01f0805949d512478c70f098779b1b85/datasets/01f0805949d5167abddfb319f56381be_o_orderdate"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Date picker"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "04811068",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "5b7cd168",
+                  "fields": [
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    },
+                    {
+                      "name": "avg(avg_acctbal)",
+                      "expression": "AVG(`avg_acctbal`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(avg_acctbal)",
+                  "displayName": "Average avg_acctbal"
+                },
+                "target": {
+                  "fieldName": "count(*)",
+                  "displayName": "Count of Records"
+                }
+              },
+              "frame": {
+                "title": "Average Account Balance",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 0,
+            "width": 1,
+            "height": 3
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "b121dd62",
+      "displayName": "Executive Summary 2",
+      "layout": [
+        {
+          "widget": {
+            "name": "36363e2d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f8c2fe06",
+                  "fields": [
+                    {
+                      "name": "r_name",
+                      "expression": "`r_name`"
+                    },
+                    {
+                      "name": "c_mktsegment",
+                      "expression": "`c_mktsegment`"
+                    },
+                    {
+                      "name": "total_volume_sales",
+                      "expression": "`total_volume_sales`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "c_mktsegment",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "c_mktsegment"
+                },
+                "y": {
+                  "fieldName": "total_volume_sales",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "total_volume_sales"
+                },
+                "color": {
+                  "fieldName": "r_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "r_name"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total Sales Volume by Market segement by each Region"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "5d45b44b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "5710b668",
+                  "fields": [
+                    {
+                      "name": "c_mktsegment",
+                      "expression": "`c_mktsegment`"
+                    },
+                    {
+                      "name": "sum(total_sales_mix)",
+                      "expression": "SUM(`total_sales_mix`)"
+                    },
+                    {
+                      "name": "sum(average_price)",
+                      "expression": "SUM(`average_price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "c_mktsegment",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "c_mktsegment"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "sum(total_sales_mix)",
+                      "displayName": "Sum of total_sales_mix"
+                    },
+                    {
+                      "fieldName": "sum(average_price)",
+                      "displayName": "Sum of average_price"
+                    }
+                  ]
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Price/Mix Performance"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "796e8a0a",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "43c4818c",
+                  "fields": [
+                    {
+                      "name": "week",
+                      "expression": "`week`"
+                    },
+                    {
+                      "name": "sum(percentage_change)",
+                      "expression": "SUM(`percentage_change`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "week",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "week"
+                },
+                "y": {
+                  "fieldName": "sum(percentage_change)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of percentage_change"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Weekly revenue percentage change"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 6,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "62be6899",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c33aa0de",
+                  "fields": [
+                    {
+                      "name": "avg(on_time_delivery_rate_percentage)",
+                      "expression": "AVG(`on_time_delivery_rate_percentage`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(on_time_delivery_rate_percentage)",
+                  "displayName": "Average on_time_delivery_rate_percentage"
+                }
+              },
+              "frame": {
+                "title": "On-time Delivery Rate",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "31e37667",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1a87bf42",
+                  "fields": [
+                    {
+                      "name": "sum(total_orders)",
+                      "expression": "SUM(`total_orders`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_orders)",
+                  "displayName": "Sum of total_orders"
+                }
+              },
+              "frame": {
+                "title": "Total Orders",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 3,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "f6ce3cff",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1a87bf42",
+                  "fields": [
+                    {
+                      "name": "sum(total_returns)",
+                      "expression": "SUM(`total_returns`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_returns)",
+                  "displayName": "Sum of total_returns"
+                }
+              },
+              "frame": {
+                "title": "Total Returns",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 3,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "af29783e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "b9fc3cc0",
+                  "fields": [
+                    {
+                      "name": "sum(total_out_of_stock_orders)",
+                      "expression": "SUM(`total_out_of_stock_orders`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_out_of_stock_orders)",
+                  "displayName": "Sum of total_out_of_stock_orders"
+                }
+              },
+              "frame": {
+                "title": "Total Out of Stock Orders",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "84142c27",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "669c28eb",
+                  "fields": [
+                    {
+                      "name": "avg(average_fill_rate)",
+                      "expression": "AVG(`average_fill_rate`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(average_fill_rate)",
+                  "displayName": "Average average_fill_rate"
+                }
+              },
+              "frame": {
+                "title": "Average Fill Rate",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "dd33137c",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "20dab91f",
+                  "fields": [
+                    {
+                      "name": "avg(average_retail_price)",
+                      "expression": "AVG(`average_retail_price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(average_retail_price)",
+                  "displayName": "Average average_retail_price"
+                }
+              },
+              "frame": {
+                "title": "Average Retail Price",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 0,
+            "width": 1,
+            "height": 3
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}
