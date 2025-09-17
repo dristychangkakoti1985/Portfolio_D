@@ -1,0 +1,5 @@
+## Power BI + Databricks Reports
+- **Report1.pbix** → NYC Trip Analysis (Imported from Databricks into csv)
+- **Report2.pbix** →NYC Trip Analysis v2 (Import mode from Databricks SQL endpoint)
+
+⚡ Connection details: Requires Databricks SQL Warehouse + Service Principal credentials.
